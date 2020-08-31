@@ -20,6 +20,6 @@ public class RandomServiceImpl implements RandomService {
 
     @Override
     public double getRandomDouble(double minValue, double maxValue) {
-        return minValue + random.nextDouble() * maxValue;
+        return random.nextDouble() * maxValue;
     }
 }

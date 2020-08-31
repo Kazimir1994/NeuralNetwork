@@ -12,11 +12,7 @@ public class NeuralNetwork {
     private final Layer[] layers;
 
     public NeuralNetwork(Layer... layers) {
-        for (Layer layer : layers) {
-            System.out.println(layer);
-        }
         this.layers = layers;
-        System.out.println("-----------------");
     }
 
     public double[] feedForward(double[] inputs) {
@@ -30,16 +26,8 @@ public class NeuralNetwork {
                     layerCurrent.getNeurons()[i] += layerPrevious.getNeurons()[j] * layerCurrent.getWeights()[i][j];
                 }
                 layerCurrent.getNeurons()[i] = activation.apply(layerCurrent.getNeurons()[i]);
-/*                               if (layerCurrent.getNeurons()[i] > 0.5) {
-                    layerCurrent.getNeurons()[i] = 1;
-                } else {
-                    layerCurrent.getNeurons()[i] = 0;
-                }*/
             }
         }
-/*        for (Layer layer : layers) {
-            System.out.println(layer);
-        }*/
         return layers[layers.length - 1].getNeurons();
     }
 
@@ -61,22 +49,14 @@ public class NeuralNetwork {
             Layer layerCurrent = layers[i];
             for (int j = 0; j < layerCurrent.getNeurons().length; j++) {
                 for (int k = 0; k < layerPrevious.getNeurons().length; k++) {
-                  //  System.out.println(j + " " + k);
                     layerCurrent.getWeights()[j][k] +=
                             learningRate
                                     * layerCurrent.getErrors()[j]
                                     * layerPrevious.getNeurons()[k]
-                            * derivative.apply(layerCurrent.getNeurons()[j]);
+                                    * derivative.apply(layerCurrent.getNeurons()[j]);
                 }
             }
-        //    System.out.println("===");
         }
-
-/*        System.out.println("=====end======");
-        for (Layer layerS : layers) {
-            System.out.println(layerS);
-        }*/
         return layer.getErrors()[0];
-
     }
 }
