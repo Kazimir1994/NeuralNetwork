@@ -50,7 +50,7 @@ public class Layer {
     private void weightAssignment() {
         for (int i = 0; i < weights.length; i++) {
             for (int j = 0; j < weights[i].length; j++) {
-                weights[i][j] = randomService.getRandomDouble(0.1, 0.5);
+                weights[i][j] = randomService.getRandomDouble(0.1, 0.8);
             }
         }
     }

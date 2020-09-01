@@ -6,7 +6,7 @@ import kazzimir.bortnik.gmail.neuralnetwork.newNeuralNetwork.model.Layer;
 import java.util.function.UnaryOperator;
 
 public class NeuralNetwork {
-    private final double learningRate = 0.01;
+    private final double learningRate = 0.1;
     UnaryOperator<Double> activation = x -> 1 / (1 + Math.exp(-x));
     UnaryOperator<Double> derivative = y -> y * (1 - y);
     private final Layer[] layers;
@@ -28,6 +28,7 @@ public class NeuralNetwork {
                 layerCurrent.getNeurons()[i] = activation.apply(layerCurrent.getNeurons()[i]);
             }
         }
+
         return layers[layers.length - 1].getNeurons();
     }
 
