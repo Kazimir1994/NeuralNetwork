@@ -1,28 +1,25 @@
 package kazzimir.bortnik.gmail.neuralnetwork.openCVNeuralNetwork.background.model;
 
+import kazzimir.bortnik.gmail.neuralnetwork.openCVNeuralNetwork.background.handler.impl.MangerHandlerImpl;
 import kazzimir.bortnik.gmail.neuralnetwork.openCVNeuralNetwork.exception.FFmpegFrameGrabberRuntime;
 import kazzimir.bortnik.gmail.neuralnetwork.openCVNeuralNetwork.repository.model.Fragment;
-import kazzimir.bortnik.gmail.neuralnetwork.openCVNeuralNetwork.servise.MachineVisionUtilService;
-import kazzimir.bortnik.gmail.neuralnetwork.openCVNeuralNetwork.servise.impl.MachineVisionUtilServiceImpl;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.FrameGrabber;
 import org.bytedeco.javacv.OpenCVFrameConverter;
 import org.opencv.core.Mat;
-import org.opencv.imgcodecs.Imgcodecs;
-import org.opencv.imgproc.Imgproc;
 
 import java.io.File;
-import java.time.Instant;
 import java.util.List;
 
 public class GrabberFrame implements Runnable {
-    private final MachineVisionUtilService machineVisionUtilService = MachineVisionUtilServiceImpl.getInstant();
-    private FFmpegFrameGrabber fFmpegFrameGrabber;
+    private final MangerHandlerImpl mangerHandler = MangerHandlerImpl.getInstants();
     public final OpenCVFrameConverter.ToOrgOpenCvCoreMat converterMap = new OpenCVFrameConverter.ToOrgOpenCvCoreMat();
+    private FFmpegFrameGrabber fFmpegFrameGrabber;
     private final DataConnect dataConnect;
     private final List<Fragment> fragments;
     private final String idSmartBoard;
+    private boolean firstRunFlag = true;
 
     public GrabberFrame(String idSmartBoard, DataConnect dataConnect, List<Fragment> fragments) throws FFmpegFrameGrabber.Exception {
         this.dataConnect = dataConnect;
@@ -36,11 +33,10 @@ public class GrabberFrame implements Runnable {
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 captureFramesAndPars();
-            } catch (FrameGrabber.Exception e) {
-                Thread.currentThread().interrupt();
+            } catch (Exception e) {
                 System.err.println(e.getMessage());
-                break;
             }
+            firstRunFlag = false;
         }
     }
 
@@ -64,14 +60,31 @@ public class GrabberFrame implements Runnable {
         return grabber;
     }
 
+    private long startTime = System.currentTimeMillis();
+
     private void captureFramesAndPars() throws FrameGrabber.Exception {
         Frame grab = fFmpegFrameGrabber.grabImage();
+        long endTime = System.currentTimeMillis();
+        if (endTime - startTime > 60000 || firstRunFlag) {
+            startTime = endTime;
+            extracted(grab);
+        }
+    }
+
+    private void extracted(Frame grab) throws FrameGrabber.Exception {
         if (grab != null) {
-            System.out.println(grab);
             parseFrame(grab);
         } else {
             reconnect();
         }
+    }
+
+    private void parseFrame(Frame grab) {
+        Mat fullMap = converterMap.convert(grab);
+        fragments.stream()
+                .parallel()
+                .forEach(fragment -> mangerHandler.performProcessing(fullMap, fragment));
+        fullMap.release();
     }
 
     private void reconnect() throws FrameGrabber.Exception {
@@ -79,28 +92,6 @@ public class GrabberFrame implements Runnable {
         fFmpegFrameGrabber.close();
         fFmpegFrameGrabber = buildFFmpegFrameGrabber(dataConnect);
         System.out.println("Reconnection successful");
-    }
-
-    private void parseFrame(Frame grab) {
-        Mat fullMap = converterMap.convert(grab);
-        fragments.stream()
-                .parallel()
-                .forEach(fragment -> saveFragment(fullMap, fragment));
-        fullMap.release();
-    }
-
-    private void saveFragment(Mat mat, Fragment fragment) {
-        Mat workspace = machineVisionUtilService.getWorkspace(mat, fragment.getMinMaxXY());
-        Mat image = processingMap(workspace);
-        Imgcodecs.imwrite("frame/" + idSmartBoard + "/" + fragment.getName() + Instant.now() + ".jpg", image);
-        image.release();
-    }
-
-    private Mat processingMap(Mat original) {
-        Mat blackWhiteMat = new Mat();
-        Imgproc.cvtColor(original, blackWhiteMat, Imgproc.COLOR_BGR2GRAY);
-        original.release();
-        return blackWhiteMat;
     }
 
     @Override

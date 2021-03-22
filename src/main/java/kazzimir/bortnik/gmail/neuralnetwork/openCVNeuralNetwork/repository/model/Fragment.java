@@ -3,6 +3,7 @@ package kazzimir.bortnik.gmail.neuralnetwork.openCVNeuralNetwork.repository.mode
 import org.bson.types.ObjectId;
 
 import java.awt.*;
+import java.util.Arrays;
 
 public class Fragment {
     private final ObjectId id;
@@ -33,5 +34,16 @@ public class Fragment {
 
     public int[] getMinMaxXY() {
         return minMaxXY;
+    }
+
+    @Override
+    public String toString() {
+        return "Fragment{" +
+                "id=" + id +
+                ", idSmartBoard=" + idSmartBoard +
+                ", name='" + name + '\'' +
+                ", minMaxXY=" + Arrays.toString(minMaxXY) +
+                ", polygon=" + polygon +
+                '}';
     }
 }
