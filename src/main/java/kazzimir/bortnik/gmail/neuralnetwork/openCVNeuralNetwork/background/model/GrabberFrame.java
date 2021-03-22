@@ -65,7 +65,7 @@ public class GrabberFrame implements Runnable {
     private void captureFramesAndPars() throws FrameGrabber.Exception {
         Frame grab = fFmpegFrameGrabber.grabImage();
         long endTime = System.currentTimeMillis();
-        if (endTime - startTime > 60000 || firstRunFlag) {
+        if (endTime - startTime > 60000*5 || firstRunFlag) {
             startTime = endTime;
             extracted(grab);
         }
