@@ -14,6 +14,7 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -26,7 +27,17 @@ import java.util.stream.Stream;
 
 public class App {
     public static void main(String[] args) {
-        Loader.load(opencv_java.class);
+        NeuralNetwork neuralNetwork = new NeuralNetwork(4, 1, 3, 2);
+        double[] input = new double[]{0.1, 0.5, 0.2, 0.9};
+        double[] output = new double[]{1,0};
+        IntStream.range(0, 1000)
+                .forEach(value -> {
+                    neuralNetwork.trainNetwork(input, output, 0.1);
+                });
+        double[] doubles = neuralNetwork.calculateOutput(input);
+        System.out.println(Arrays.toString(doubles));
+
+   /*     Loader.load(opencv_java.class);
         System.out.println("Load data opencv_java");
         List<Image> imagesPositive = loadImage("./frame/605373f13f727636dff06c0d/Tool/", 1).subList(0, 1000);
         System.out.println("Read positive data size");
@@ -35,8 +46,8 @@ public class App {
         List<Image> association = association(imagesPositive, imagesNegative);
         System.out.println("Association and shuffle data");
         List<Image> data = imageResizingAndConvertMapToArrayDouble(association, 50, 50);
-        System.out.println("Resizing and convert Map to array Double image");
-
+        System.out.println("Resizing and convert Map to array Double image");*/
+/*
         Layer layer_1 = new Layer(0, 2500);
         Layer layer_2 = new Layer(2500, 1000);
         Layer layer_3 = new Layer(1000, 800);
@@ -58,7 +69,7 @@ public class App {
             });
             System.out.printf("==========Epoch -> %d, Error -> %f %n==========", epoch, error.get());
             error.set(error.get() + 1);
-        } while (error.get() > 0.01);
+        } while (error.get() > 0.01);*/
         //      for (int i = 0; i < inputParameters.length; i++) {
         //     double[] doubles = neuralNetwork.feedForward(inputParameters[i]);
         //     System.out.println(Arrays.toString(inputParameters[i]) + " -> " + answers[i] + "| actual->" + Arrays.toString(doubles));
