@@ -43,7 +43,7 @@ public class GrabberFrame implements Runnable {
     }
 
     private void configuration() {
-        new File("frame/" + idSmartBoard + "/Tool/").mkdirs();
+        new File("frame/" + idSmartBoard + "/EmptyTool/").mkdirs();
         new File("frame/" + idSmartBoard + "/Border/").mkdirs();
         try {
             this.fFmpegFrameGrabber = buildFFmpegFrameGrabber(dataConnect);
@@ -88,9 +88,8 @@ public class GrabberFrame implements Runnable {
 
     private void parseFrameTool(Mat fullMap) {
         try {
-            fragmentTools.stream()
-                    .parallel()
-                    .forEach(fragment -> mangerHandler.performProcessing(fullMap, fragment, "Tool"));
+            fragmentTools.stream().parallel()
+                    .forEach(fragment -> mangerHandler.performProcessing(fullMap, fragment, "EmptyTool"));
         } catch (Exception exception) {
             System.err.println(exception.getMessage());
         }

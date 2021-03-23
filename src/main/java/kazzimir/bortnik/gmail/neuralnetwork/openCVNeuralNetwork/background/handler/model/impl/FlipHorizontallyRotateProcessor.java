@@ -10,6 +10,8 @@ public class FlipHorizontallyRotateProcessor implements Processor {
     public void process(Mat workspace, Fragment fragment, String namePage) {
         Mat flipHorizontallyRotate = new Mat();
         Core.flip(workspace, flipHorizontallyRotate, -1);
-        lightControl(flipHorizontallyRotate, fragment.getIdSmartBoard().toString(), fragment.getName(), -6, 6, "-1_" + namePage,"-1");
+        lightControl(flipHorizontallyRotate,
+                fragment.getIdSmartBoard().toString(),
+                fragment.getName(), -4, 6, "-1_" + namePage,"-1");
     }
 }
