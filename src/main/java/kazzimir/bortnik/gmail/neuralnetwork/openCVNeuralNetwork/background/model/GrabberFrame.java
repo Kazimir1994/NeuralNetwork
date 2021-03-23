@@ -17,14 +17,16 @@ public class GrabberFrame implements Runnable {
     public final OpenCVFrameConverter.ToOrgOpenCvCoreMat converterMap = new OpenCVFrameConverter.ToOrgOpenCvCoreMat();
     private FFmpegFrameGrabber fFmpegFrameGrabber;
     private final DataConnect dataConnect;
-    private final List<Fragment> fragments;
+    private final List<Fragment> fragmentTools;
+    private final List<Fragment> fragmentsBorder;
     private final String idSmartBoard;
     private boolean firstRunFlag = true;
 
-    public GrabberFrame(String idSmartBoard, DataConnect dataConnect, List<Fragment> fragments) throws FFmpegFrameGrabber.Exception {
+    public GrabberFrame(String idSmartBoard, DataConnect dataConnect, List<Fragment> fragmentTools, List<Fragment> fragmentsBorder) throws FFmpegFrameGrabber.Exception {
         this.dataConnect = dataConnect;
-        this.fragments = fragments;
+        this.fragmentTools = fragmentTools;
         this.idSmartBoard = idSmartBoard;
+        this.fragmentsBorder = fragmentsBorder;
     }
 
     @Override
@@ -41,7 +43,8 @@ public class GrabberFrame implements Runnable {
     }
 
     private void configuration() {
-        new File("frame/" + idSmartBoard + "/").mkdirs();
+        new File("frame/" + idSmartBoard + "/Tool/").mkdirs();
+        new File("frame/" + idSmartBoard + "/Border/").mkdirs();
         try {
             this.fFmpegFrameGrabber = buildFFmpegFrameGrabber(dataConnect);
         } catch (FFmpegFrameGrabber.Exception e) {
@@ -65,7 +68,7 @@ public class GrabberFrame implements Runnable {
     private void captureFramesAndPars() throws FrameGrabber.Exception {
         Frame grab = fFmpegFrameGrabber.grabImage();
         long endTime = System.currentTimeMillis();
-        if (endTime - startTime > 60000*5 || firstRunFlag) {
+        if (endTime - startTime > 60000 * 5 || firstRunFlag) {
             startTime = endTime;
             extracted(grab);
         }
@@ -73,18 +76,33 @@ public class GrabberFrame implements Runnable {
 
     private void extracted(Frame grab) throws FrameGrabber.Exception {
         if (grab != null) {
-            parseFrame(grab);
+            Mat fullMap = converterMap.convert(grab);
+            parseFrameTool(fullMap);
+            parseFrameBorder(fullMap);
+            fullMap.release();
         } else {
             reconnect();
         }
+
     }
 
-    private void parseFrame(Frame grab) {
-        Mat fullMap = converterMap.convert(grab);
-        fragments.stream()
-                .parallel()
-                .forEach(fragment -> mangerHandler.performProcessing(fullMap, fragment));
-        fullMap.release();
+    private void parseFrameTool(Mat fullMap) {
+        try {
+            fragmentTools.stream()
+                    .parallel()
+                    .forEach(fragment -> mangerHandler.performProcessing(fullMap, fragment, "Tool"));
+        } catch (Exception exception) {
+            System.err.println(exception.getMessage());
+        }
+    }
+
+    private void parseFrameBorder(Mat fullMap) {
+        try {
+            fragmentsBorder.stream()
+                    .parallel().forEach(fragment -> mangerHandler.performProcessing(fullMap, fragment, "Border"));
+        } catch (Exception exception) {
+            System.err.println(exception.getMessage());
+        }
     }
 
     private void reconnect() throws FrameGrabber.Exception {
@@ -98,8 +116,11 @@ public class GrabberFrame implements Runnable {
     public String toString() {
         return "GrabberFrame{" +
                 "dataConnect=" + dataConnect +
-                ", fragments=" + fragments +
+                ", fragmentTools=" + fragmentTools +
+                ", fragmentsBorder=" + fragmentsBorder +
                 ", idSmartBoard='" + idSmartBoard + '\'' +
+                ", firstRunFlag=" + firstRunFlag +
+                ", startTime=" + startTime +
                 '}';
     }
 }

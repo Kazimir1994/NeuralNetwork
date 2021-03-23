@@ -60,10 +60,13 @@ public class GrabberFrameServiceImpl implements GrabberFrameService {
     }
 
     private GrabberFrame getGrabberFrame(String idSmartBoard, DataConnect dataConnect) {
-        List<ElementVision> elementVisions = getToolsByIdSmartBoard(idSmartBoard);
-        List<Fragment> fragments = machineVisionUtilService.convertToElementMachineVision(elementVisions);
+        List<ElementVision> elementVisionsTools = getToolsByIdSmartBoard(idSmartBoard);
+        List<Fragment> fragmentTools = machineVisionUtilService.convertToElementMachineVision(elementVisionsTools);
+
+        List<ElementVision> borderByIdSmartBoard = getBorderByIdSmartBoard(idSmartBoard);
+        List<Fragment> fragmentsBorder = machineVisionUtilService.convertToElementMachineVision(borderByIdSmartBoard);
         try {
-            return new GrabberFrame(idSmartBoard, dataConnect, fragments);
+            return new GrabberFrame(idSmartBoard, dataConnect, fragmentTools, fragmentsBorder);
         } catch (FFmpegFrameGrabber.Exception e) {
             throw new FFmpegFrameGrabberRuntime(e);
         }
@@ -71,6 +74,11 @@ public class GrabberFrameServiceImpl implements GrabberFrameService {
 
     private List<ElementVision> getToolsByIdSmartBoard(String idSmartBoard) {
         MongoCollection<ElementVision> collectionTool = collectionRepository.getCollection(EnumTableName.TOOL);
+        return collectionTool.find(new Document("idSmartBoard", new ObjectId(idSmartBoard))).into(new ArrayList<>());
+    }
+
+    private List<ElementVision> getBorderByIdSmartBoard(String idSmartBoard) {
+        MongoCollection<ElementVision> collectionTool = collectionRepository.getCollection(EnumTableName.BORDER);
         return collectionTool.find(new Document("idSmartBoard", new ObjectId(idSmartBoard))).into(new ArrayList<>());
     }
 }

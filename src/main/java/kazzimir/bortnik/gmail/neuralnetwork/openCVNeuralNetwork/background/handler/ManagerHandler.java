@@ -4,5 +4,5 @@ import kazzimir.bortnik.gmail.neuralnetwork.openCVNeuralNetwork.repository.model
 import org.opencv.core.Mat;
 
 public interface ManagerHandler {
-    void performProcessing(Mat mat, Fragment fragment);
+    void performProcessing(Mat mat, Fragment fragment, String namePage);
 }

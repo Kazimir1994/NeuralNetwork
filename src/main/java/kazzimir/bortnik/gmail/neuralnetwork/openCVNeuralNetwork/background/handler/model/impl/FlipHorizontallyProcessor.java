@@ -7,12 +7,10 @@ import org.opencv.core.Mat;
 
 public class FlipHorizontallyProcessor implements Processor {
     @Override
-    public void process(Mat workspace, Fragment fragment) {
+    public void process(Mat workspace, Fragment fragment, String namePage) {
         Mat flipHorizontally = new Mat();
         Core.flip(workspace, flipHorizontally, 0);
         lightControl(flipHorizontally,
-                fragment.getIdSmartBoard().toString(),
-                fragment.getName(),
-                -6, 6);
+                fragment.getIdSmartBoard().toString(), fragment.getName(), -6, 6, namePage,"0");
     }
 }

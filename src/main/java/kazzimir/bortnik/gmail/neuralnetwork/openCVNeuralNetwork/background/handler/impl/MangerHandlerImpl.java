@@ -29,11 +29,11 @@ public class MangerHandlerImpl implements ManagerHandler {
     }
 
     @Override
-    public void performProcessing(Mat mat, Fragment fragment) {
+    public void performProcessing(Mat mat, Fragment fragment, String namePage) {
         System.out.println("Manger_Handler mat ->" + mat + " fragment ->" + fragment);
         Mat workspace = getWorkspace(mat, fragment);
         processors.stream().parallel()
-                .forEach(processor -> processor.process(workspace, fragment));
+                .forEach(processor -> processor.process(workspace, fragment, namePage));
         workspace.release();
     }
 

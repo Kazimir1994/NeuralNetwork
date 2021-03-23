@@ -12,22 +12,22 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public interface Processor {
-    void process(Mat workspace, Fragment fragment);
+    void process(Mat workspace, Fragment fragment, String namePage);
 
-    default void saveImage(Mat workspace, String idSmartBoard, String name, String prefix) {
-        Imgcodecs.imwrite("frame/" + idSmartBoard + "/" + name + prefix + "_" + Instant.now() + ".jpg", workspace);
+    default void saveImage(Mat workspace, String idSmartBoard, String name, String prefix, String namePage) {
+        Imgcodecs.imwrite("frame/" + idSmartBoard + "/" + namePage + "/" + name + prefix + "_" + Instant.now() + ".jpg", workspace);
     }
 
-    default void lightControl(Mat workspace, String idSmartBoard, String name, int startPoint, int endPoint) {
+    default void lightControl(Mat workspace, String idSmartBoard, String name, int startPoint, int endPoint, String namePage, String prefix) {
         Mat imgHSV = new Mat();
         Imgproc.cvtColor(workspace, imgHSV, Imgproc.COLOR_BGR2HSV);
-        IntStream.rangeClosed(startPoint, endPoint)
+        IntStream.range(startPoint, endPoint)
                 .forEach(brightnessLevel -> {
                     Mat imgHSVWithChangedLightLevel = new Mat();
                     Core.add(imgHSV, new Scalar(0, 0, brightnessLevel * 10), imgHSVWithChangedLightLevel);
                     Imgproc.cvtColor(imgHSVWithChangedLightLevel, imgHSVWithChangedLightLevel, Imgproc.COLOR_HSV2BGR);
                     Imgproc.cvtColor(imgHSVWithChangedLightLevel, imgHSVWithChangedLightLevel, Imgproc.COLOR_BGR2GRAY);
-                    saveImage(imgHSVWithChangedLightLevel, idSmartBoard, name, "_brightnessLevel:" + brightnessLevel);
+                    saveImage(imgHSVWithChangedLightLevel, idSmartBoard, name, "{" + prefix + "}" + "_brightnessLevel:" + brightnessLevel, namePage);
                     imgHSVWithChangedLightLevel.release();
                 });
         imgHSV.release();
