@@ -6,10 +6,10 @@ public class Image {
     private Mat mat;
     private final String name;
     private final String parameter;
-    private final int answer;
+    private final double[] answer;
     private double[] inputData;
 
-    public Image(String name, String parameter, Mat mat, int answer) {
+    public Image(String name, String parameter, Mat mat, double... answer) {
         this.name = name;
         this.parameter = parameter;
         this.mat = mat;
@@ -32,7 +32,7 @@ public class Image {
         this.mat = mat;
     }
 
-    public int getAnswer() {
+    public double[] getAnswer() {
         return answer;
     }
 
