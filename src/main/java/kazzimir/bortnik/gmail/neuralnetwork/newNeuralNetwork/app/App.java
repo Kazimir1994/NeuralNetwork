@@ -21,76 +21,57 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class App {
     public static void main(String[] args) {
-/*
-        NeuralNetwork neuralNetwork = new NeuralNetwork(4, 1, 3, 2);
-        double[] input = new double[]{0.1, 0.5, 0.2, 0.9};
-        double[] output = new double[]{1, 0};
-        double error;
-        do {
-            error = 0;
-            double[] answer = neuralNetwork.calculateOutput(input);
-            neuralNetwork.backPropagationError(output,0.1);
-            for (int i = 0; i < output.length; i++) {
-                error += Math.abs(output[i] - answer[i]);
-            }
-            System.out.println(error);
-        } while (error > 0.01);
-        double[] doubles = neuralNetwork.calculateOutput(input);
-        System.out.println(Arrays.toString(doubles));
-*/
 
         Loader.load(opencv_java.class);
         System.out.println("Load data opencv_java");
-/*        search("./frame2/605373f13f727636dff06c0d/positive", "./frame/605373f13f727636dff06c0d/Tool");
-        search("./frame2/605373f13f727636dff06c0d/negative", "./frame/605373f13f727636dff06c0d/EmptyTool");*/
-        List<Image> imagesPositive = loadImage("./frame2/605373f13f727636dff06c0d/positive/", 1, 0).subList(0, 60);
-
+       /* search("./frame2/605373f13f727636dff06c0d/positive", "./frame2/605373f13f727636dff06c0d/original_positive");
+        search("./frame2/605373f13f727636dff06c0d/negative", "./frame2/605373f13f727636dff06c0d/original_negative");*/
+        List<Image> imagesPositive = loadImage("./frame2/605373f13f727636dff06c0d/positive/", 1, 0).subList(0, 4000);
         System.out.println("Read positive data size:=" + imagesPositive.size());
-        List<Image> imagesNegative = loadImage("./frame2/605373f13f727636dff06c0d/negative/", 0, 1).subList(0, 60);
-
+        List<Image> imagesNegative = loadImage("./frame2/605373f13f727636dff06c0d/negative/", 0, 1).subList(0, 4000);
         System.out.println("Read negative data size:=" + imagesNegative.size());
         List<Image> association = association(imagesPositive, imagesNegative);
         System.out.println("Association and shuffle data");
-        List<Image> data = imageResizingAndConvertMapToArrayDouble(association, 30, 30);
-        data.forEach(image -> {
-            Imgcodecs.imwrite(image.getName().concat(Instant.now().toString()) + ".jpg", image.getMat());
-        });
+        List<Image> data = imageResizingAndConvertMapToArrayDouble(association, 150, 150);
         System.out.println("Resizing and convert Map to array Double image");
-        //625, 1000, 300, 700, 200, 50, 10, 100, 2
-        //625, 1250, 712, 650, 535, 300, 150, 10, 2
-        NeuralNetwork neuralNetwork = new NeuralNetwork(900, 40, 80, 5, 4, 2);
+        NeuralNetwork neuralNetwork = new NeuralNetwork(22500, 225, 6, 2);
 
-        AtomicReference<Double> error = new AtomicReference<>(0.0);
-        int epoch = 1;
+        var ref = new Object() {
+            double mse = 0;
+            int epoch = 1;
+            int previousEpoch = 0;
+        };
+
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+        scheduler.scheduleAtFixedRate(() -> {
+            if (ref.previousEpoch != ref.epoch) {
+                System.out.println("==========Epoch -> " + ref.epoch + ", Error train-> " + ref.mse + ", time-> " + Instant.now() + "==========");
+                ref.previousEpoch = ref.epoch;
+            }
+        }, 1, 3, TimeUnit.SECONDS);
+
         do {
-            error.set(0.0);
-            data.forEach(image -> {
-                double[] calculateAnswer = neuralNetwork.calculateOutput(image.getInputData());
-               neuralNetwork.backPropagationError(image.getAnswer(), 0.1);
-                for (int i = 0; i < calculateAnswer.length; i++) {
-                    double abs = Math.abs(calculateAnswer[i] - image.getAnswer()[i]);
-                    error.updateAndGet(v -> v + abs);
-                }
-            });
-            System.out.println("==========Epoch -> " + epoch + ", Error -> " + error.get() / data.size() + "==========");
-            epoch++;
-        } while (error.get() / data.size() > 0.1);
+            ref.mse = neuralNetwork.MSE(data, 0.001);
+            ref.epoch++;
+        } while ((ref.mse > 0.001) && (ref.epoch < 50));
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("NeuralNetwork" + Instant.now() + ".dat"))) {
-
             oos.writeObject(neuralNetwork);
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
+        scheduler.shutdown();
     }
 
-    private static List<Image> imageResizingAndConvertMapToArrayDouble(List<Image> images, int x, int y) {
+    public static List<Image> imageResizingAndConvertMapToArrayDouble(List<Image> images, int x, int y) {
         return images.stream()
                 .parallel()
                 .peek(image -> {
@@ -100,45 +81,86 @@ public class App {
                     Imgproc.cvtColor(newImageSize, newImageSize, Imgproc.COLOR_BGR2GRAY);
                     image.setMat(newImageSize);
                     mat.release();
-
-                    double[] inputData = convertMapToArrayDouble(image.getMat());
+                    double[] inputData = convertMapToArrayDouble2(image.getMat());
                     image.setInputData(inputData);
                 })
                 .collect(Collectors.toList());
     }
 
-    private static List<Image> loadImage(String path, double... answer) {
+    public static List<Image> loadImage(String path, double... answer) {
         File file = new File(path);
         List<Image> collect = Stream.of(Objects.requireNonNull(file.list()))
                 .parallel()
-                .filter(nameFile -> nameFile.matches("^.* scissors_ORIGINAL_.*$"))
+                // .filter(nameFile -> nameFile.matches("^.*_ORIGINAL_.*$"))
                 .map(nameFile -> buildImage(file.getAbsolutePath(), nameFile, answer))
                 .collect(Collectors.toList());
-        Collections.shuffle(collect, new Random(55));
+        Collections.shuffle(collect);
         return collect;
     }
 
-    private static void search(String pathSave, String pathSearch) {
+
+    public static void search(String pathSave, String pathSearch) {
         new File(pathSave).mkdirs();
         Stream.of(Objects.requireNonNull(new File(pathSearch).list()))
-                .filter(nameFile -> nameFile.matches("^.*_ORIGINAL_.*$"))
+                .parallel()
+                // .filter(nameFile -> nameFile.matches("^.*_ORIGINAL_.*$"))
                 .forEach(nameFile -> {
+                    String name = nameFile.substring(0, nameFile.indexOf("_"));
                     Mat img = Imgcodecs.imread(pathSearch.concat("/").concat(nameFile));
-                    Imgproc.cvtColor(img, img, Imgproc.COLOR_BGR2GRAY);
-                    Imgcodecs.imwrite(pathSave.concat("/").concat(nameFile).concat(Instant.now().toString()) + ".jpg", img);
+
+                    Mat saveOriginal = new Mat();
+                    Imgproc.cvtColor(img, saveOriginal, Imgproc.COLOR_BGR2GRAY);
+                    Imgcodecs.imwrite(pathSave.concat("/").concat(name + "_").concat(Instant.now().toString()) + ".jpg", saveOriginal);
+                    saveOriginal.release();
+                    IntStream.rangeClosed(1, 3).parallel()
+                            .forEach(value -> {
+                                Mat rotate = new Mat();
+                                switch (value) {
+                                    case 1 -> {
+                                        Core.rotate(img, rotate, Core.ROTATE_90_CLOCKWISE);
+                                    }
+                                    case 2 -> {
+                                        Core.rotate(img, rotate, Core.ROTATE_180);
+                                    }
+                                    case 3 -> {
+                                        Core.rotate(img, rotate, Core.ROTATE_90_COUNTERCLOCKWISE);
+                                    }
+                                }
+                                IntStream.rangeClosed(-1, 1).parallel()
+                                        .forEach(value2 -> {
+                                            Mat dataFlip = new Mat();
+                                            Core.flip(rotate, dataFlip, value2);
+                                            lightControl(dataFlip, -4, 4, name, pathSave);
+                                            dataFlip.release();
+                                        });
+                            });
+                    img.release();
                 });
     }
 
-    private static Image buildImage(String path, String nameFile, double... answer) {
-        String name = nameFile.substring(0, nameFile.indexOf("_"));
-   /*     int i = nameFile.indexOf("{");
-        String name = nameFile.substring(0, nameFile.indexOf("_"));
-        String parameter = nameFile.substring(i + 1, i + 2);*/
-        Mat img = Imgcodecs.imread(path.concat("/").concat(nameFile));
-        return new Image(name, null, img, answer);
+    public static void lightControl(Mat workspace, int startPoint, int endPoint, String nameFile, String pathSave) {
+        Mat imgHSV = new Mat();
+        Imgproc.cvtColor(workspace, imgHSV, Imgproc.COLOR_BGR2HSV);
+        IntStream.range(startPoint, endPoint)
+                .parallel()
+                .forEach(brightnessLevel -> {
+                    Mat imgHSVWithChangedLightLevel = new Mat();
+                    Core.add(imgHSV, new Scalar(0, 0, brightnessLevel * 10), imgHSVWithChangedLightLevel);
+                    Imgproc.cvtColor(imgHSVWithChangedLightLevel, imgHSVWithChangedLightLevel, Imgproc.COLOR_HSV2BGR);
+                    Imgproc.cvtColor(imgHSVWithChangedLightLevel, imgHSVWithChangedLightLevel, Imgproc.COLOR_BGR2GRAY);
+                    Imgcodecs.imwrite(pathSave.concat("/").concat(nameFile).concat(Instant.now().toString()) + ".jpg", imgHSVWithChangedLightLevel);
+                    imgHSVWithChangedLightLevel.release();
+                });
+        imgHSV.release();
+        workspace.release();
     }
 
-    private static double[] convertMapToArrayDouble(Mat mat) {
+    public static Image buildImage(String path, String nameFile, double... answer) {
+        Mat img = Imgcodecs.imread(path.concat("/").concat(nameFile));
+        return new Image(nameFile, null, img, answer);
+    }
+
+    public static double[] convertMapToArrayDouble(Mat mat) {
         double[] arr = new double[mat.cols() * mat.rows()];
         int index = 0;
         for (int x = 0; x < mat.rows(); x++) {
@@ -150,7 +172,7 @@ public class App {
         return arr;
     }
 
-    private static double[] convertMapToArrayDouble2(Mat mat) {
+    public static double[] convertMapToArrayDouble2(Mat mat) {
         Mat newImageSize = new Mat();
         Core.divide(mat, new Scalar(255), newImageSize, 1, CvType.CV_64FC1);
         double[] arr = new double[newImageSize.cols() * newImageSize.rows()];
@@ -159,7 +181,7 @@ public class App {
     }
 
     @SafeVarargs
-    private static List<Image> association(List<Image>... images) {
+    public static List<Image> association(List<Image>... images) {
         List<Image> collect = Stream.of(images)
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());

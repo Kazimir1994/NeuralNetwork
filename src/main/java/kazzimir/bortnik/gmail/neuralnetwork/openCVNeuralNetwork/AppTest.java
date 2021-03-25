@@ -1,13 +1,16 @@
 package kazzimir.bortnik.gmail.neuralnetwork.openCVNeuralNetwork;
 
-import java.util.stream.IntStream;
+import org.bytedeco.ffmpeg.global.avutil;
+import org.bytedeco.javacpp.Loader;
+import org.bytedeco.opencv.opencv_java;
+import org.opencv.core.Core;
+import org.opencv.core.Mat;
+import org.opencv.imgcodecs.Imgcodecs;
 
 public class AppTest {
     public static void main(String[] args) {
-        IntStream.rangeClosed(-6, 6).forEach(value -> {
-            System.out.println(value*10);
-        });
-    /*    Loader.load(opencv_java.class);
+
+        Loader.load(opencv_java.class);
         avutil.av_log_set_level(-1);
         String path = AppTest.class.getResource("/1.jpg").getFile();
         Mat img = Imgcodecs.imread(path);
@@ -15,6 +18,9 @@ public class AppTest {
             System.out.println("Не удалось загрузить изображение");
             return;
         }
+        Core.rotate(img, img, Core.ROTATE_90_COUNTERCLOCKWISE);
+        Imgcodecs.imwrite("imgHSV90с.jpg", img);
+        /*
         List<Mat> channels = new ArrayList<>();
         Core.split(img, channels);
         Mat img2 = new Mat();
