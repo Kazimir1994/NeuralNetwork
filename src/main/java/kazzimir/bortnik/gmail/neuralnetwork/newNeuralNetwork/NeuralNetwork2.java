@@ -35,46 +35,26 @@ public class NeuralNetwork2 implements Serializable {
         for (int i = 0; i < NETWORK_SIZE; i++) {
             this.OUTPUT[i] = Nd4j.create(new double[1][NETWORK_LAYER_SIZES[i]]);
             Nd4j.create(new double[NETWORK_LAYER_SIZES[i]]);
-            double[] randomArray1 = NetworkTools.createRandomArray(NETWORK_LAYER_SIZES[i], 2, 2);
+            double[] randomArray1 = NetworkTools.createRandomArray(NETWORK_LAYER_SIZES[i], -0.5, 0.7);
             this.BIAS[i] = Nd4j.create(randomArray1);
             this.ERROR_SIGNAL[i] = Nd4j.create(new double[NETWORK_LAYER_SIZES[i]]);
             this.OUTPUT_DERIVATIVE[i] = Nd4j.create(new double[NETWORK_LAYER_SIZES[i]]);
             if (i > 0) {
-                double[][] randomArray = NetworkTools.createRandomArray(NETWORK_LAYER_SIZES[i], NETWORK_LAYER_SIZES[i - 1], 2, 2);
-                WEIGHTS[i] = Nd4j.create(randomArray).transpose();
-                //  weights[i] = Nd4j.rand(Nd4j.create(new double[NETWORK_LAYER_SIZES[i - 1]][NETWORK_LAYER_SIZES[i]]), 2, 2, Nd4j.getRandom());
+                /*double[][] randomArray = NetworkTools.createRandomArray(NETWORK_LAYER_SIZES[i], NETWORK_LAYER_SIZES[i - 1], -1, 1);
+                WEIGHTS[i] = Nd4j.create(randomArray).transpose();*/
+                WEIGHTS[i] = Nd4j.rand(Nd4j.create(new double[NETWORK_LAYER_SIZES[i ]][NETWORK_LAYER_SIZES[i-1]]), -1, 1, Nd4j.getRandom()).transpose();
             }
         }
     }
 
-    /*   public INDArray calculateOutput(double... input) {
-           if (input.length != this.INPUT_SIZE) {
-               throw new IllegalArgumentException("the number of incoming neurons must be equal to the number of neurons in the layer");
-           }
-           this.OUTPUT[0].putRow(0, Nd4j.createFromArray(input));
-           for (int layer = 1; layer < NETWORK_SIZE; layer++) {
-               INDArray indArray = OUTPUT[layer - 1];
-               INDArray weight = WEIGHTS[layer];
-               INDArray bia = BIAS[layer];
-               INDArray mmul = OUTPUT[layer - 1].mmul(WEIGHTS[layer]);
-               INDArray add = mmul.add(bia);
-               INDArray sigmoid = Transforms.sigmoid(add);
-               OUTPUT[layer] = sigmoid;
-               OUTPUT_DERIVATIVE[layer] = Transforms.sigmoidDerivative(add);
-           }
-           return this.OUTPUT[NETWORK_SIZE - 1];
-       }*/
-    public INDArray calculateOutput(double... input) {
-        if (input.length != this.INPUT_SIZE) {
-            throw new IllegalArgumentException("the number of incoming neurons must be equal to the number of neurons in the layer");
-        }
-        this.OUTPUT[0].putRow(0, Nd4j.createFromArray(input));
+    public INDArray calculateOutput(INDArray input) {
+        this.OUTPUT[0].putRow(0, input);
         for (int layer = 1; layer < NETWORK_SIZE; layer++) {
             INDArray outputMultiplyWeights = OUTPUT[layer - 1]
                     .mmul(WEIGHTS[layer])
                     .add(BIAS[layer]);
             OUTPUT[layer] = Transforms.sigmoid(outputMultiplyWeights);
-        //    OUTPUT_DERIVATIVE[layer] = Transforms.sigmoidDerivative(outputMultiplyWeights);
+            OUTPUT_DERIVATIVE[layer] = Transforms.sigmoidDerivative(outputMultiplyWeights);
         }
         return this.OUTPUT[NETWORK_SIZE - 1];
     }
@@ -98,15 +78,6 @@ public class NeuralNetwork2 implements Serializable {
             INDArray deltaM = delta.mmul(OUTPUT[layer - 1]);
             WEIGHTS[layer] = WEIGHTS[layer].add(deltaM.transpose());
         }
- /*       for (int layer = 1; layer < NETWORK_SIZE; layer++) {
-            for (int neuron = 0; neuron < NETWORK_LAYER_SIZES[layer]; neuron++) {
-                double delta = (-1 * learnRate) * error_signal[layer][neuron];
-                bias[layer][neuron] += delta;
-                for (int prevNeuron = 0; prevNeuron < NETWORK_LAYER_SIZES[layer - 1]; prevNeuron++) {
-                    weights[layer][neuron][prevNeuron] += delta * output[layer - 1][prevNeuron];
-                }
-            }
-        }*/
     }
 /*    private void updateWeights(double learnRate) {
         for (int layer = 1; layer < NETWORK_SIZE; layer++) {
