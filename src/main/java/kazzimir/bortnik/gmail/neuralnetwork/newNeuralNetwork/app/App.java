@@ -33,11 +33,19 @@ public class App {
 
         Loader.load(opencv_java.class);
         System.out.println("Load data opencv_java");
-       /* search("./frame2/605373f13f727636dff06c0d/positive", "./frame2/605373f13f727636dff06c0d/original_positive");
-        search("./frame2/605373f13f727636dff06c0d/negative", "./frame2/605373f13f727636dff06c0d/original_negative");*/
-        List<Image> imagesPositive = loadImage("./frame2/605373f13f727636dff06c0d/positive/", 1, 0).subList(0, 4000);
+        //searchAndPreprocessingImage();
+        runNeuralNetwork();
+    }
+
+    private static void searchAndPreprocessingImage() {
+        searchAndPreprocessingImage("./frame2/605373f13f727636dff06c0d/positive", "./frame2/605373f13f727636dff06c0d/original_positive");
+        searchAndPreprocessingImage("./frame2/605373f13f727636dff06c0d/negative", "./frame2/605373f13f727636dff06c0d/original_negative");
+    }
+
+    private static void runNeuralNetwork() {
+        List<Image> imagesPositive = loadImage("./frame2/605373f13f727636dff06c0d/positive/", 1, 0).subList(0, 40400  );
         System.out.println("Read positive data size:=" + imagesPositive.size());
-        List<Image> imagesNegative = loadImage("./frame2/605373f13f727636dff06c0d/negative/", 0, 1).subList(0, 4000);
+        List<Image> imagesNegative = loadImage("./frame2/605373f13f727636dff06c0d/negative/", 0, 1).subList(0, 40400 );
         System.out.println("Read negative data size:=" + imagesNegative.size());
         List<Image> association = association(imagesPositive, imagesNegative);
         System.out.println("Association and shuffle data");
@@ -62,7 +70,7 @@ public class App {
         do {
             ref.mse = neuralNetwork.MSE(data, 0.001);
             ref.epoch++;
-        } while ((ref.mse > 0.001) && (ref.epoch < 50));
+        } while ((ref.mse > 0.001) && (ref.epoch < 30));
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("NeuralNetwork" + Instant.now() + ".dat"))) {
             oos.writeObject(neuralNetwork);
         } catch (Exception ex) {
@@ -73,7 +81,6 @@ public class App {
 
     public static List<Image> imageResizingAndConvertMapToArrayDouble(List<Image> images, int x, int y) {
         return images.stream()
-                .parallel()
                 .peek(image -> {
                     Mat mat = image.getMat();
                     Mat newImageSize = new Mat();
@@ -99,7 +106,7 @@ public class App {
     }
 
 
-    public static void search(String pathSave, String pathSearch) {
+    public static void searchAndPreprocessingImage(String pathSave, String pathSearch) {
         new File(pathSave).mkdirs();
         Stream.of(Objects.requireNonNull(new File(pathSearch).list()))
                 .parallel()
@@ -130,7 +137,7 @@ public class App {
                                         .forEach(value2 -> {
                                             Mat dataFlip = new Mat();
                                             Core.flip(rotate, dataFlip, value2);
-                                            lightControl(dataFlip, -4, 4, name, pathSave);
+                                            lightControl(dataFlip, -2, 6, name, pathSave);
                                             dataFlip.release();
                                         });
                             });
@@ -156,7 +163,9 @@ public class App {
     }
 
     public static Image buildImage(String path, String nameFile, double... answer) {
+
         Mat img = Imgcodecs.imread(path.concat("/").concat(nameFile));
+
         return new Image(nameFile, null, img, answer);
     }
 

@@ -4,13 +4,14 @@ package kazzimir.bortnik.gmail.neuralnetwork.newNeuralNetwork;
 import kazzimir.bortnik.gmail.neuralnetwork.newNeuralNetwork.model.Image;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.UnaryOperator;
 
 public class NeuralNetwork implements Serializable {
     private static final long serialVersionUID = 1L;
-    private transient final UnaryOperator<Double> activation = x -> 1 / (1 + Math.exp(-1 * x));
-    private transient final UnaryOperator<Double> derivative = y -> y * (1 - y);
+    public transient UnaryOperator<Double> activation = x -> 1 / (1 + Math.exp(-1 * x));
+    public transient UnaryOperator<Double> derivative = y -> y * (1 - y);
 
     private final int[] NETWORK_LAYER_SIZES;
     private final int INPUT_SIZE;

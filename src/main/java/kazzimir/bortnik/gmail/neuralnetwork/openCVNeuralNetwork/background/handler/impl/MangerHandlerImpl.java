@@ -44,9 +44,9 @@ public class MangerHandlerImpl implements ManagerHandler {
     private List<Processor> registrationProcessor() {
         List<Processor> processors = new ArrayList<>();
         processors.add(new ProcessorOriginal());
-        processors.add(new FlipHorizontallyProcessor());
+/*        processors.add(new FlipHorizontallyProcessor());
         processors.add(new FlipHorizontallyRotateProcessor());
-        processors.add(new FlipVerticallyProcessor());
+        processors.add(new FlipVerticallyProcessor());*/
         return processors;
     }
 }

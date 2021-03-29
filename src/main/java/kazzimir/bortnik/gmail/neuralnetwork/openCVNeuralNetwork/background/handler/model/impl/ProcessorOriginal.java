@@ -9,6 +9,6 @@ public class ProcessorOriginal implements Processor {
     @Override
     public void process(Mat workspace, Fragment fragment, String namePage) {
         saveImage(workspace, fragment.getIdSmartBoard().toString(), fragment.getName(), "_ORIGINAL", namePage);
-        lightControl(workspace, fragment.getIdSmartBoard().toString(), fragment.getName(), -6, 6, namePage,"2");
+     //   lightControl(workspace, fragment.getIdSmartBoard().toString(), fragment.getName(), -6, 6, namePage,"2");
     }
 }

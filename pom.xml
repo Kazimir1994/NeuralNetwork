@@ -19,6 +19,16 @@
              <version>1.0.0-beta7</version>
          </dependency>
          <dependency>
+             <groupId>org.nd4j</groupId>
+             <artifactId>nd4j-cuda-10.2</artifactId>
+             <version>1.0.0-beta7</version>
+         </dependency>
+         <dependency>
+             <groupId>org.nd4j</groupId>
+             <artifactId>nd4j-native</artifactId>
+             <version>1.0.0-beta7</version>
+         </dependency>
+         <dependency>
              <groupId>org.mongodb</groupId>
              <artifactId>mongo-java-driver</artifactId>
              <version>3.12.8</version>
