@@ -14,40 +14,38 @@ public class TestNMap {
 
     public static void main(String[] args) {
 
-        double[] target = new double[]{0.1, 0.5};
-        int sizeInputData = 2500;
-        int colEpoh = 1000;
+        double[] target = new double[]{0.3, 0.9, 0.1};
+        int sizeInputData = 23298;
+        int colEpoh = 20;
         double[] inputData = new double[sizeInputData];
         for (int i = 0; i < sizeInputData; i++) {
             inputData[i] = i;
         }
-        NeuralNetwork neuralNetwork = new NeuralNetwork(sizeInputData, 700, 10, 2);
+     /*   NeuralNetwork neuralNetwork = new NeuralNetwork(sizeInputData, 700, 10, 3);
         long l2 = System.nanoTime();
         for (int i = 0; i < colEpoh; i++) {
             double[] doublesA = neuralNetwork.calculateOutput(inputData);
-              neuralNetwork.backPropagationError(target, 0.1);
+           // neuralNetwork.backPropagationError(target, 0.1);
         }
         long l3 = System.nanoTime();
-        System.out.println("time " + (l3 - l2));
-/*        double[] doublesA = neuralNetwork.calculateOutput(inputData);
+        System.out.println("time " + (l3 - l2));*/
+      /*  double[] doublesA = neuralNetwork.calculateOutput(inputData);
         System.out.println(Arrays.toString(doublesA));*/
 
-        NeuralNetwork2 neuralNetwork2 = new NeuralNetwork2(sizeInputData, 700, 40, 2);
-        INDArray fromArray = Nd4j.createFromArray(inputData);
+        INDArray fromArray = Nd4j.create(new double[][]{inputData});
+        NeuralNetwork2 neuralNetwork2 = new NeuralNetwork2(sizeInputData, 700, 10, 3);
+        INDArray indArray = neuralNetwork2.calculateOutput(fromArray);
         long l = System.nanoTime();
-
         for (int i = 0; i < colEpoh; i++) {
-            INDArray indArray = neuralNetwork2.calculateOutput(fromArray);
-             neuralNetwork2.backPropagationError(Nd4j.create(target), 0.1);
+            //INDArray indArray = neuralNetwork2.calculateOutput(fromArray);
+            neuralNetwork2.backPropagationError(Nd4j.create(target), 0.1);
         }
         long l1 = System.nanoTime();
         System.out.println("time " + (l1 - l));
-   /*     INDArray indArray = neuralNetwork2.calculateOutput(inputData);
-        System.out.println(indArray);
-        System.out.println("end");*/
-
+       // INDArray indArray = neuralNetwork2.calculateOutput(fromArray);
+        System.out.println("answer-> " + indArray);
     }
-
+// 4885950068  4982582224 4956631176
     public static double[][] mull(double[][] a, double[][] b) {
         double[][] re = new double[a.length][b[0].length];
 

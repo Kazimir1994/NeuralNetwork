@@ -1,16 +1,14 @@
 package kazzimir.bortnik.gmail.neuralnetwork.newNeuralNetwork;
 
-
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.ops.transforms.Transforms;
 
 import java.io.Serializable;
+import java.util.UUID;
 
 public class NeuralNetwork2 implements Serializable {
     private static final long serialVersionUID = 1L;
-
-
     private final int[] NETWORK_LAYER_SIZES;
     private final int INPUT_SIZE;
     private final int OUTPUT_SIZE;
@@ -33,25 +31,23 @@ public class NeuralNetwork2 implements Serializable {
         this.WEIGHTS = new INDArray[NETWORK_SIZE];
 
         for (int i = 0; i < NETWORK_SIZE; i++) {
-            this.OUTPUT[i] = Nd4j.create(new double[1][NETWORK_LAYER_SIZES[i]]);
-            Nd4j.create(new double[NETWORK_LAYER_SIZES[i]]);
-            double[] randomArray1 = NetworkTools.createRandomArray(NETWORK_LAYER_SIZES[i], -0.5, 0.7);
+            this.OUTPUT[i] = Nd4j.create(new double[NETWORK_LAYER_SIZES[i]]);
+            double[] randomArray1 = NetworkTools.createRandomArray(NETWORK_LAYER_SIZES[i], 1, 1);
             this.BIAS[i] = Nd4j.create(randomArray1);
-            this.ERROR_SIGNAL[i] = Nd4j.create(new double[NETWORK_LAYER_SIZES[i]]);
-            this.OUTPUT_DERIVATIVE[i] = Nd4j.create(new double[NETWORK_LAYER_SIZES[i]]);
+            this.ERROR_SIGNAL[i] = Nd4j.create(NETWORK_LAYER_SIZES[i]);
+            this.OUTPUT_DERIVATIVE[i] = Nd4j.create(NETWORK_LAYER_SIZES[i]);
             if (i > 0) {
-                /*double[][] randomArray = NetworkTools.createRandomArray(NETWORK_LAYER_SIZES[i], NETWORK_LAYER_SIZES[i - 1], -1, 1);
-                WEIGHTS[i] = Nd4j.create(randomArray).transpose();*/
-                WEIGHTS[i] = Nd4j.rand(Nd4j.create(new double[NETWORK_LAYER_SIZES[i ]][NETWORK_LAYER_SIZES[i-1]]), -1, 1, Nd4j.getRandom()).transpose();
+                // WEIGHTS[i] = Nd4j.rand(Nd4j.create(new double[NETWORK_LAYER_SIZES[i-1]][NETWORK_LAYER_SIZES[i]]), 1, 1, Nd4j.getRandom());
+                WEIGHTS[i] = Nd4j.rand(Nd4j.create(new double[NETWORK_LAYER_SIZES[i]][NETWORK_LAYER_SIZES[i - 1]]), 1, 1, Nd4j.getRandom());
             }
         }
     }
 
     public INDArray calculateOutput(INDArray input) {
-        this.OUTPUT[0].putRow(0, input);
+        this.OUTPUT[0] = input;
         for (int layer = 1; layer < NETWORK_SIZE; layer++) {
             INDArray outputMultiplyWeights = OUTPUT[layer - 1]
-                    .mmul(WEIGHTS[layer])
+                    .mmul(WEIGHTS[layer].transpose())
                     .add(BIAS[layer]);
             OUTPUT[layer] = Transforms.sigmoid(outputMultiplyWeights);
             OUTPUT_DERIVATIVE[layer] = Transforms.sigmoidDerivative(outputMultiplyWeights);
@@ -60,6 +56,27 @@ public class NeuralNetwork2 implements Serializable {
     }
 
     public void backPropagationError(INDArray target, double learnRate) {
+        ERROR_SIGNAL[NETWORK_SIZE - 1] = OUTPUT[NETWORK_SIZE - 1]
+                .sub(target)
+                .mulRowVector(OUTPUT_DERIVATIVE[NETWORK_SIZE - 1]);
+        for (int layer = NETWORK_SIZE - 2; layer > 0; layer--) {
+            this.ERROR_SIGNAL[layer] = ERROR_SIGNAL[layer + 1]
+                    .mmul(WEIGHTS[layer + 1])
+                    .muliRowVector(OUTPUT_DERIVATIVE[layer]);
+        }
+        updateWeights(learnRate);
+    }
+
+    private void updateWeights(double learnRate) {
+        for (int layer = 1; layer < NETWORK_SIZE; layer++) {
+            INDArray delta = ERROR_SIGNAL[layer].muli((-1 * learnRate));
+            BIAS[layer] = delta.addRowVector(BIAS[layer]);
+            INDArray deltaM = delta.transpose().mmul(OUTPUT[layer - 1]);
+            WEIGHTS[layer] = WEIGHTS[layer].add(deltaM);
+        }
+    }
+
+  /*  public void backPropagationError(INDArray target, double learnRate) {
         ERROR_SIGNAL[NETWORK_SIZE - 1] = OUTPUT[NETWORK_SIZE - 1]
                 .subi(target)
                 .muli(OUTPUT_DERIVATIVE[NETWORK_SIZE - 1]).transpose();
@@ -78,37 +95,5 @@ public class NeuralNetwork2 implements Serializable {
             INDArray deltaM = delta.mmul(OUTPUT[layer - 1]);
             WEIGHTS[layer] = WEIGHTS[layer].add(deltaM.transpose());
         }
-    }
-/*    private void updateWeights(double learnRate) {
-        for (int layer = 1; layer < NETWORK_SIZE; layer++) {
-            for (int neuron = 0; neuron < NETWORK_LAYER_SIZES[layer]; neuron++) {
-                double delta = (-1 * learnRate) * error_signal[layer][neuron];
-                bias[layer][neuron] += delta;
-                for (int prevNeuron = 0; prevNeuron < NETWORK_LAYER_SIZES[layer - 1]; prevNeuron++) {
-                    weights[layer][neuron][prevNeuron] += delta * output[layer - 1][prevNeuron];
-                }
-            }
-        }
-    }*/
-/*
-    public double MSE(double[] input, double[] target, double learnRate) {
-        if (input.length != INPUT_SIZE || target.length != OUTPUT_SIZE) {
-            return 0;
-        }
-        calculateOutput(input);
-        backPropagationError(target, learnRate);
-        double v = 0;
-        for (int i = 0; i < target.length; i++) {
-            v += (target[i] - output[NETWORK_SIZE - 1][i]) * (target[i] - output[NETWORK_SIZE - 1][i]);
-        }
-        return v / (2d * target.length);
-    }
-
-    public double MSE(List<Image> data, double learnRate) {
-        double v = 0;
-        for (Image image : data) {
-            v += MSE(image.getInputData(), image.getAnswer(), learnRate);
-        }
-        return v / data.size();
     }*/
 }
