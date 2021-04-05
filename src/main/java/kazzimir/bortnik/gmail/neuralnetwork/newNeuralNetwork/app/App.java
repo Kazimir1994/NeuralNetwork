@@ -24,6 +24,7 @@ import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -38,8 +39,8 @@ public class App {
     }
 
     private static void searchAndPreprocessingImage() {
-        //searchAndPreprocessingImage("./newData/POSITIVE_PREPROCESSING", "./newData/P_O");
-           searchAndPreprocessingImage("./newData/NEGATIVE_PREPROCESSING", "./newData/N_O");
+        searchAndPreprocessingImage("./newData/p", "./N_P/p");
+        searchAndPreprocessingImage("./newData/n", "./N_P/n");
     }
 
     private static void runNeuralNetwork() {
@@ -107,42 +108,46 @@ public class App {
 
 
     public static void searchAndPreprocessingImage(String pathSave, String pathSearch) {
-        //new File(pathSave).mkdirs();
-        Stream.of(Objects.requireNonNull(new File(pathSearch).list()))
-                //.filter(nameFile -> nameFile.matches("^.*_ORIGINAL_.*$"))
+        new File(pathSave).mkdirs();
+        AtomicInteger i = new AtomicInteger();
+        String[] list = new File(pathSearch).list();
+        String s = list[0];
+        List.of(list)
                 .forEach(nameFile -> {
                     try {
                         System.out.println(nameFile);
-                        String name = nameFile.substring(0, nameFile.indexOf("_"));
                         Mat img = Imgcodecs.imread(pathSearch.concat("/").concat(nameFile));
-                        Imgcodecs.imwrite(pathSave.concat("/").concat(name + "_").concat(Instant.now().toString()) + ".jpg", img);
+                        Imgcodecs.imwrite(pathSave.concat("/").concat(i.toString()) + ".jpg", img);
+
                         IntStream.rangeClosed(1, 3).parallel()
                                 .forEach(value -> {
                                     Mat rotate = new Mat();
+                                    String prefixNameSveFile;
                                     switch (value) {
                                         case 1 -> {
+                                            prefixNameSveFile = "ROTATE_90_CLOCKWISE";
                                             Core.rotate(img, rotate, Core.ROTATE_90_CLOCKWISE);
+
                                         }
                                         case 2 -> {
+                                            prefixNameSveFile = "ROTATE_180";
                                             Core.rotate(img, rotate, Core.ROTATE_180);
                                         }
                                         case 3 -> {
+                                            prefixNameSveFile = "ROTATE_90_COUNTERCLOCKWISE";
                                             Core.rotate(img, rotate, Core.ROTATE_90_COUNTERCLOCKWISE);
                                         }
+                                        default -> throw new IllegalStateException("Unexpected value: " + value);
                                     }
-                                    IntStream.rangeClosed(-1, 1).parallel()
-                                            .forEach(value2 -> {
-                                                Mat dataFlip = new Mat();
-                                                Core.flip(rotate, dataFlip, value2);
-                                                lightControl(dataFlip, -6, 6, name, pathSave);
-                                                dataFlip.release();
-                                            });
+                                    Imgcodecs.imwrite(pathSave.concat("/").concat(i.toString()).concat(prefixNameSveFile) + ".jpg", rotate);
                                 });
+
                         img.release();
                         System.out.println("end");
                     } catch (Exception exception) {
                         System.err.println(exception.getMessage());
                     }
+                    i.getAndIncrement();
                 });
     }
 
