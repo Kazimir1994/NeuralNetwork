@@ -37,7 +37,6 @@ public class NeuralNetwork2 implements Serializable {
             this.ERROR_SIGNAL[i] = Nd4j.create(NETWORK_LAYER_SIZES[i]);
             this.OUTPUT_DERIVATIVE[i] = Nd4j.create(NETWORK_LAYER_SIZES[i]);
             if (i > 0) {
-                // WEIGHTS[i] = Nd4j.rand(Nd4j.create(new double[NETWORK_LAYER_SIZES[i-1]][NETWORK_LAYER_SIZES[i]]), 1, 1, Nd4j.getRandom());
                 WEIGHTS[i] = Nd4j.rand(Nd4j.create(new double[NETWORK_LAYER_SIZES[i]][NETWORK_LAYER_SIZES[i - 1]]), 1, 1, Nd4j.getRandom());
             }
         }

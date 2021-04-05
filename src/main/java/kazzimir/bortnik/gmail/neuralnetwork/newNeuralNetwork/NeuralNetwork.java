@@ -43,6 +43,10 @@ public class NeuralNetwork implements Serializable {
                 weights[i] = NetworkTools.createRandomArray(NETWORK_LAYER_SIZES[i], NETWORK_LAYER_SIZES[i - 1], -1, 1);
             }
         }
+        for (int i = 1; i < weights.length; i++) {
+            System.out.println(weights[i][0].length+"X"+weights[i].length);
+
+        }
     }
 
     public double[] calculateOutput(double... input) {

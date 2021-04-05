@@ -15,7 +15,7 @@ public interface Processor {
     void process(Mat workspace, Fragment fragment, String namePage);
 
     default void saveImage(Mat workspace, String idSmartBoard, String name, String prefix, String namePage) {
-        Imgcodecs.imwrite("frame/" + idSmartBoard + "/" + namePage + "/" + name + prefix + "_" + Instant.now() + ".jpg", workspace);
+        Imgcodecs.imwrite("frame3/" + idSmartBoard + "/" + namePage + "/" + name + prefix + "_" + Instant.now() + ".jpg", workspace);
     }
 
     default void lightControl(Mat workspace, String idSmartBoard, String name, int startPoint, int endPoint, String namePage, String prefix) {

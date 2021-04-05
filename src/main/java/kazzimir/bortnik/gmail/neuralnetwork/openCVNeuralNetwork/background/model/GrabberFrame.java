@@ -43,8 +43,8 @@ public class GrabberFrame implements Runnable {
     }
 
     private void configuration() {
-        new File("frame/" + idSmartBoard + "/Tool/").mkdirs();
-        new File("frame/" + idSmartBoard + "/Border/").mkdirs();
+        new File("frame3/" + idSmartBoard + "/Tool/").mkdirs();
+        new File("frame3/" + idSmartBoard + "/Border/").mkdirs();
         try {
             this.fFmpegFrameGrabber = buildFFmpegFrameGrabber(dataConnect);
         } catch (FFmpegFrameGrabber.Exception e) {
