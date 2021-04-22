@@ -127,7 +127,6 @@ public class App {
                                         case 1 -> {
                                             prefixNameSveFile = "ROTATE_90_CLOCKWISE";
                                             Core.rotate(img, rotate, Core.ROTATE_90_CLOCKWISE);
-
                                         }
                                         case 2 -> {
                                             prefixNameSveFile = "ROTATE_180";
@@ -171,7 +170,6 @@ public class App {
     public static Image buildImage(String path, String nameFile, double... answer) {
         System.out.println(path.concat("/").concat(nameFile));
         Mat img = Imgcodecs.imread(path.concat("/").concat(nameFile));
-
         return new Image(nameFile, null, img, answer);
     }
 
